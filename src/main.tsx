@@ -6,15 +6,18 @@ import App from './App.tsx'
 import { CartProvider } from './cart.tsx'
 import { ProductsProvider } from './products.tsx'
 import { AuthProvider } from './auth.tsx'
+import { SettingsProvider } from './settings.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <AuthProvider>
         <ProductsProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <SettingsProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </SettingsProvider>
         </ProductsProvider>
       </AuthProvider>
     </HashRouter>

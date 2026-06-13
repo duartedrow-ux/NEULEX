@@ -1,4 +1,12 @@
+import { useSettings } from '../settings'
+
 export function ContactPage() {
+  const { settings, isLoading } = useSettings()
+
+  const whatsappUrl = settings?.whatsapp_number 
+    ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`
+    : null
+
   return (
     <div className="page">
       <div className="pageHeader">
@@ -9,7 +17,21 @@ export function ContactPage() {
       <div className="panel">
         <div className="panelRow">
           <div className="muted">WhatsApp</div>
-          <div className="panelValue">Disponible desde el carrito</div>
+          <div className="panelValue">
+            {isLoading ? 'Cargando...' : (
+              settings?.whatsapp_number ? (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button buttonPrimary buttonSmall"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  💬 Enviar mensaje
+                </a>
+              ) : 'Próximamente disponible'
+            )}
+          </div>
         </div>
         <div className="panelRow">
           <div className="muted">Horarios</div>

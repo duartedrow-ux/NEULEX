@@ -3,6 +3,7 @@ import type { Product, ProductCategory } from '../catalog'
 import { formatArs } from '../catalog'
 import { useProducts } from '../products'
 import { useAuth } from '../auth'
+import { useSettings } from '../settings'
 
 type DraftProduct = {
   id: string
@@ -84,6 +85,7 @@ function toProduct(d: DraftProduct): { ok: true; product: Product } | { ok: fals
 export function AdminPage() {
   const auth = useAuth()
   const productsApi = useProducts()
+  const settingsApi = useSettings()
   const usedIds = useMemo(() => new Set(productsApi.products.map((p) => p.id)), [productsApi.products])
   
   // Get all unique categories from products + default categories
@@ -109,6 +111,10 @@ export function AdminPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [changePasswordError, setChangePasswordError] = useState<string | null>(null)
+
+  // Settings modal state
+  const [showSettings, setShowSettings] = useState(false)
+  const [whatsappInput, setWhatsappInput] = useState('')
   
   function handleLogin() {
     setLoginError(null)
@@ -120,6 +126,21 @@ export function AdminPage() {
   
   function handleLogout() {
     auth.logout()
+  }
+
+  function openSettings() {
+    setWhatsappInput(settingsApi.settings?.whatsapp_number || '')
+    setShowSettings(true)
+  }
+
+  function closeSettings() {
+    setShowSettings(false)
+  }
+
+  async function saveSettings() {
+    await settingsApi.updateSetting('whatsapp_number', whatsappInput)
+    setStatus('Número de WhatsApp guardado.')
+    closeSettings()
   }
   
   function handleChangePassword() {
@@ -278,7 +299,10 @@ export function AdminPage() {
             <h1 className="h1Small">Admin</h1>
             <p className="muted">Cargá y editá productos. Se guardan en este dispositivo.</p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button type="button" className="button buttonGhost buttonSmall" onClick={openSettings} title="Configuraciones">
+              ⚙️
+            </button>
             <button type="button" className="button buttonGhost buttonSmall" onClick={() => setShowChangePassword(!showChangePassword)}>
               {showChangePassword ? 'Cancelar' : 'Cambiar contraseña'}
             </button>
@@ -336,6 +360,32 @@ export function AdminPage() {
           <div className="adminFormActions">
             <button type="button" className="button buttonPrimary" onClick={handleChangePassword}>
               Guardar nueva contraseña
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {showSettings ? (
+        <div className="panel" style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 className="h1Small">Configuraciones</h2>
+            <button type="button" className="button buttonGhost buttonSmall" onClick={closeSettings}>
+              ✕
+            </button>
+          </div>
+          <div className="adminField">
+            <div className="adminLabel">Número de WhatsApp</div>
+            <input
+              className="input adminInput"
+              type="tel"
+              value={whatsappInput}
+              onChange={(e) => setWhatsappInput(e.target.value)}
+              placeholder="Ej: +5491112345678"
+            />
+          </div>
+          <div className="adminFormActions">
+            <button type="button" className="button buttonPrimary" onClick={saveSettings}>
+              Guardar
             </button>
           </div>
         </div>

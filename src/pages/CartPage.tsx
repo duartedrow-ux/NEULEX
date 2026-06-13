@@ -2,17 +2,19 @@ import { Link } from 'react-router-dom'
 import { formatArs } from '../catalog'
 import { useCart } from '../cart'
 import { useProducts } from '../products'
-
-const WHATSAPP_PHONE_E164 = '5490000000000'
-
-function whatsappUrl(text: string) {
-  const encoded = encodeURIComponent(text)
-  return `https://wa.me/${WHATSAPP_PHONE_E164}?text=${encoded}`
-}
+import { useSettings } from '../settings'
 
 export function CartPage() {
   const cart = useCart()
   const { byId } = useProducts()
+  const { settings, isLoading } = useSettings()
+
+  function whatsappUrl(text: string) {
+    if (!settings?.whatsapp_number) return '#'
+    const encoded = encodeURIComponent(text)
+    const cleanNumber = settings.whatsapp_number.replace(/\D/g, '')
+    return `https://wa.me/${cleanNumber}?text=${encoded}`
+  }
 
   const subtotalArs = cart.lines.reduce((acc, line) => {
     const p = byId[line.productId]
@@ -113,14 +115,20 @@ export function CartPage() {
                 <div className="panelValue">{cart.totalItems}</div>
               </div>
 
-              <a
-                className="button buttonPrimary buttonFull"
-                href={whatsappUrl(whatsappText)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Enviar pedido por WhatsApp
-              </a>
+              {!settings?.whatsapp_number ? (
+                <div className="note" style={{ marginBottom: '1rem', backgroundColor: 'var(--color-error-10)', color: 'var(--color-error)' }}>
+                  Primero configurá tu número de WhatsApp en el panel de administración!
+                </div>
+              ) : (
+                <a
+                  className="button buttonPrimary buttonFull"
+                  href={whatsappUrl(whatsappText)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Enviar pedido por WhatsApp
+                </a>
+              )}
 
               <button
                 type="button"
@@ -129,10 +137,6 @@ export function CartPage() {
               >
                 Vaciar carrito
               </button>
-
-              <div className="note">
-                Si el número de WhatsApp no es el correcto, cambialo en el código de la app.
-              </div>
             </div>
           </aside>
         </div>
