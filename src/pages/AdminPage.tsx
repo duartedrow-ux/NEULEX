@@ -183,13 +183,13 @@ export function AdminPage() {
     const normalized: DraftProduct = { ...draft, id: finalId }
     const parsed = toProduct(normalized)
     if (!parsed.ok) {
-      setStatus(parsed.error)
+      setStatus((parsed as any).error)
       return
     }
 
-    await productsApi.upsert(parsed.product)
-    setEditingId(parsed.product.id)
-    setDraft(toDraft(parsed.product))
+    await productsApi.upsert((parsed as any).product)
+    setEditingId((parsed as any).product.id)
+    setDraft(toDraft((parsed as any).product))
     setStatus('Guardado.')
   }
 
@@ -204,7 +204,7 @@ export function AdminPage() {
     const text = await file.text()
     const result = productsApi.importJson(text)
     if (result.ok) setStatus('Importación OK.')
-    else setStatus(result.error)
+    else setStatus((result as any).error)
     startNew()
   }
 

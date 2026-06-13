@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { Product, ProductCategory } from './catalog'
 import { PRODUCTS as DEFAULT_PRODUCTS } from './catalog'
 import { supabase } from './lib/supabase'
@@ -21,7 +21,7 @@ type ProductsApi = {
   importJson: (jsonText: string) => { ok: true } | { ok: false; error: string }
 }
 
-const isCategory = (value: string): value is ProductCategory => true
+const isCategory = (_value: string): _value is ProductCategory => true
 
 const sanitizeProducts = (input: unknown): Product[] | null => {
   if (!Array.isArray(input)) return null
@@ -64,7 +64,7 @@ const sanitizeProducts = (input: unknown): Product[] | null => {
 }
 
 const PRODUCTS_STORAGE_KEY = 'neulex_products_v1'
-const INITIALIZED_KEY = 'neulex_initialized' // New key to track if we've initialized before
+const INITIALIZED_KEY = 'neulex_initialized'
 
 const loadStoredProducts = (): Product[] | null => {
   const raw = localStorage.getItem(PRODUCTS_STORAGE_KEY)
@@ -82,10 +82,6 @@ const saveStoredProducts = (products: Product[]) => {
   localStorage.setItem(INITIALIZED_KEY, 'true')
 }
 
-const removeStoredProducts = () => {
-  localStorage.removeItem(PRODUCTS_STORAGE_KEY)
-}
-
 const ProductsContext = createContext<ProductsApi | null>(null)
 
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
@@ -95,7 +91,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     isInitialized: false
   })
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     const hasInitialized = localStorage.getItem(INITIALIZED_KEY) === 'true'
     if (supabase) {
       try {
@@ -147,8 +143,8 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
           tags: item.tags,
         }))
         setState(s => ({ ...s, products: mappedProducts, isLoading: false, isInitialized: true }))
-      } catch (error) {
-        console.error('Error in fetchProducts with Supabase:', error)
+      } catch (_error) {
+        console.error('Error in fetchProducts with Supabase')
         const stored = loadStoredProducts()
         if (stored) {
           setState(s => ({ ...s, products: stored, isLoading: false, isInitialized: true }))
@@ -170,7 +166,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({ ...s, products: [], isLoading: false, isInitialized: true }))
       }
     }
-  }
+  }, [])
 
   // Add real-time subscription
   useEffect(() => {
@@ -184,9 +180,11 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (supabase) {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [])
+  }, [fetchProducts])
 
   useEffect(() => {
     fetchProducts()
