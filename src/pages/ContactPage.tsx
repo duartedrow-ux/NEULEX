@@ -5,7 +5,7 @@ export function ContactPage() {
 
   const whatsappUrl = settings?.whatsapp_number 
     ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`
-    : null
+    : undefined
 
   return (
     <div className="page">

@@ -94,7 +94,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (supabase) {
+        supabase.removeChannel(channel)
+      }
     }
   }, [fetchSettings])
 
